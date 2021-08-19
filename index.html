@@ -48,11 +48,14 @@
 	    <div class="card-body">
 	      <div class="card-title"><h4>The Network Model</h4></div>
 	      <div class="card-subtitle mb-2 text-muted"><h5>An interactive picture is worth a thousand words</h5></div>
-	      <div class="card-text">This interactive graphic shows the network model described in the paper. You can move the square handles to move the lines. Double-click on the line to create and delete handles. It will not let you create diagrams that break the rules of CCAC. This graphic is in early stages of development. Please check back for improvements.</div>
+	      <div class="card-text">This interactive graphic shows the network model described in the paper. You can move the square handles to move the lines. Double-click on the line to create and delete handles. It will not let you create diagrams that break the rules of the CCAC network model. The example shown is that of a token bucket filter where S(t) can also burst along with A(t) upto 1 BDP. Here, D = 1 propagation delay. Touch screens are not supported.</div>
 	      <div class="row">
+		<div class="col-md-4"><svg xmlns="http://www.w3.org/2000/svg" width=50 height=20><line x1=0 y1=10 x2=40 y2=10 style="stroke:rgb(0,0,255);stroke-width:2"></line></svg>Arrival Curve, A(t)</div>
+		<div class="col-md-4"><svg xmlns="http://www.w3.org/2000/svg" width=50 height=20><line x1=0 y1=10 x2=40 y2=10 style="stroke:rgb(255,0,0);stroke-width:2"></line></svg>Service Curve, A(t)</div>
+		<div class="col-md-4"><svg xmlns="http://www.w3.org/2000/svg" width=50 height=20><line x1=0 y1=10 x2=40 y2=10 style="stroke:rgb(0,0,0);stroke-width:2"></line></svg>Bounds on S(t)</div>
 		<svg id="cumulative_graph" xmlns="http://www.w3.org/2000/svg" style="aspect-ratio: 1;" width="100%"></svg>
 	      </div>
-	      <div class="alert alert-primary"><b>Message:</b> <p id="messages"></p></div>
+	      <div class="alert alert-primary"><b>Message:</b> <p id="messages"></p>The widget will sometimes prevent you from dragging handles into places that would lead to a violation of a constraint in the model. An explanation of the violation will appear here</div>
 	    </div>
 	  </div>
 	</div>

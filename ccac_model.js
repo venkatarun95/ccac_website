@@ -90,9 +90,11 @@ function onLineDblClick(evt, graph, line) {
 }
 
 function onLineMouseMove(evt, graph) {
-    if (!drag || Date.now() - last_move < 10) {
+    if (Date.now() - last_move < 10)
 	return;
-    }
+
+    if (!drag)
+	return;
     last_move = Date.now();
 
     const index = cur_index;
@@ -179,14 +181,14 @@ class Graph {
 	    "y1": this.y0,
 	    "x2": this.x1,
 	    "y2": this.y0,
-	    "style": "stroke:rgb(0,0,0);stroke-width:2"
+	    "style": "stroke:rgb(0,0,0);stroke-width:3"
 	});
 	svg_elem(this.svg, "line", {
 	    "x1": this.x0,
 	    "y1": this.y0,
 	    "x2": this.x0,
 	    "y2": this.y1,
-	    "style": "stroke:rgb(0,0,0);stroke-width:2"
+	    "style": "stroke:rgb(0,0,0);stroke-width:3"
 	});
 	svg_elem(this.svg, "text", {
 	    "x": (this.x0 + this.x1) / 2,
@@ -206,7 +208,7 @@ class Graph {
 		"y1": this.y0 - 5,
 		"x2": this.x_coord(t),
 		"y2": this.y0 + 5,
-		"style": "stroke:rgb(0,0,0);stroke-width:2"
+		"style": "stroke:rgb(0,0,0);stroke-width:3"
 	    });
 	    svg_elem(this.svg, "text", {
 		"x": this.x_coord(t) - 5,
@@ -220,7 +222,7 @@ class Graph {
 		"y1": this.y_coord(b),
 		"x2": this.x0 + 5,
 		"y2": this.y_coord(b),
-		"style": "stroke:rgb(0,0,0);stroke-width:2"
+		"style": "stroke:rgb(0,0,0);stroke-width:3"
 	    });
 	    svg_elem(this.svg, "text", {
 		"x": this.x0 - 15,
@@ -380,7 +382,7 @@ function check_ccac_constraints(line_name) {
 	    msgs += "The slope of the bounds must be <= C, because that is the rate at which tokens arrive. ";
 	    return [false, changed, msgs];
 	}
-	if (slope < C * (1 - 1e-6)) {
+	if (slope < C * (1 - 0.1)) {
 	    // See if waste is allowed here
 	    if (U[i-1][1] < lines["A"].get_y(U[i-1][0]) ||
 	        U[i][1] < lines["A"].get_y(U[i][0])) {
@@ -408,11 +410,19 @@ var T = 5;
 const epsilon = 1e-6;
 
 // The set of lines
+// var lines = {
+//     "A": new Line("A", [[0, 0.5*C], [T, C*T + 0.5*C]], "blue"),
+//     "S": new Line("S", [[0, -0.5*C], [T, C*(T-0.1)]], "red"),
+//     "U": new Line("U", [[0, 0], [T, C*T]], "black"),
+//     "L": new Line("L", [[D, 0], [T+D, C*T]], "black"),
+// };
+
+// These values were created using the graphical interface, and hence the ridiculously large precision
 var lines = {
-    "A": new Line("A", [[0, 0.5*C], [T, C*T + 0.5*C]], "blue"),
-    "S": new Line("S", [[0, -0.5*C], [T, C*(T-0.1)]], "red"),
-    "U": new Line("U", [[0, 0], [T, C*T]], "black"),
-    "L": new Line("L", [[D, 0], [T+D, C*T]], "black"),
+    "A": new Line("A", [[0,0.03318518411049237],[0.9098360655737703,0.9410859127079423],[3.6967213114754096,1.1126479963570128],[3.703551912568306,3.1350751366120218],[5,3.1388320054295717]], "blue"),
+    "S": new Line("S", [[0,-0.03569004357621072],[0.9644808743169397,0.9097789910321681],[3.737704918032787,1.0876024590163937],[3.771857923497268,1.945412112932605],[5,3.1162909836065573]], "red"),
+    "U": new Line("U", [[0,0],[0.9576502732240435,0.947347297043097],[2.8087431693989067,1.0850977524165033],[5,3.170138927105346]], "black"),
+    "L": new Line("L", [[1,0],[1.9576502732240435,0.947347297043097],[3.8087431693989067,1.0850977524165033],[6,3.170138927105346]], "black"),
 };
 
 var cum;
