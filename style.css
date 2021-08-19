@@ -1,0 +1,7 @@
+.graph-line {
+  stroke-width: 1px;
+}
+
+.graph-line:hover {
+  stroke-width: 2px;
+}
