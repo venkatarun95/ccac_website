@@ -1,23 +1,65 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>Formally Verifying Congestion Control Behavior</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-KyZXEAg3QhqLMpG8r+8fhAXLRk2vvoC2f3B09zVXn8CA5QIVfZOJ3BCsw2P0p/We" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <link href="open-iconic/font/css/open-iconic-bootstrap.css" rel="stylesheet">
     <link href="style.css" rel="stylesheet">
     <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
-    <!-- <script src="lodash.js"></script> -->
+    <script src="lodash.js"></script>
     <script type="text/javascript" src="ccac_model.js"></script>
   </head>
 
   <body>
-    <div class="container-lg">
+    <div class="jumbotron">
+      <div class="container">
+        <blockquote class="blockquote text-right">
+          <h2 class="mb-0">Toward Formally Verifying Congestion Control Behavior</h2>
+          <h4 class="text-muted">Venkat Arun, Mina Tahmasbi Arashloo<sup>*</sup>, Ahmed Saeed, Mohammad Alizadeh and Hari Balakrishnan</h4>
+          <h4 class="text-muted">ACM SIGCOMM 2021</h4>
+          <footer class="blockquote-footer">MIT, CSAIL and Cornell University<sup>*</sup></footer>
+        </blockquote>
+      </div>
+    </div>
+    <div class="container">
+
+      <div class="row justify-content-center mt-5 mb-5">
+	<div class="col-md-auto">
+	  <div class="btn-group" role="group">
+	    <a class="btn btn-outline-primary" href="https://dl.acm.org/doi/pdf/10.1145/3452296.3472912">Paper PDF</a>
+	    <a class="btn btn-outline-primary" href="https://github.com/venkatarun95/ccac">Code</a>
+	    <a class="btn btn-outline-primary" href="https://github.com/venkatarun95/ccac_proofs">Automated Proofs</a>
+	    <!--<a class="btn btn-outline-primary" href="https://www.youtube.com/watch?v=BV0vITB54H0">Talk</a>
+		<a class="btn btn-outline-primary" href="rfocus-slides.pptx">Slides</a>-->
+	  </div>
+	</div>
+      </div>
       <div class="row">
+	<h4>Abstract</h4>
+	<p class="lead">
+	  The diversity of paths on the Internet makes it difficult for designers and operators to confidently deploy new congestion control algorithms (CCAs) without extensive real-world experiments, but such capabilities are not available to most of the networking community. And even when they are available, understanding why a CCA under-performs by trawling through massive amounts of statistical data from network connections is challenging. The history of congestion control is replete with many examples of surprising and unanticipated behaviors unseen in simulation but observed on real-world paths. In this paper, we propose initial steps toward modeling and improving our confidence in a CCA’s behavior. We have developed Congestion Control Anxiety Controller (CCAC), a tool that uses formal verification to establish certain properties of CCAs. It is able to prove hypotheses about CCAs or generate counterexamples for invalid hypotheses. With CCAC, a designer can not only gaingreater confidence prior to deployment to avoid unpleasant surprises, but can also use the counterexamples to iteratively improve their algorithm. We have modeled additive-increase/multiplicative-decrease (AIMD), Copa, and BBR with CCAC, and describe some surprising results from the exercise.
+	</p>
+      </div>
+      <div class="row justify-content-center">
 	<div class="col-md">
-	  <svg id="cumulative_graph" xmlns="http://www.w3.org/2000/svg"></svg>
+	  <div class="card">
+	    <div class="card-body">
+	      <div class="card-title"><h4>The Network Model</h4></div>
+	      <div class="card-subtitle mb-2 text-muted"><h5>An interactive picture is worth a thousand words</h5></div>
+	      <div class="card-text">This interactive graphic shows the network model described in the paper. You can move the square handles to move the lines. Double-click on the line to create and delete handles. It will not let you create diagrams that break the rules of CCAC. This graphic is in early stages of development. Please check back for improvements.</div>
+	      <div class="row">
+		<svg id="cumulative_graph" xmlns="http://www.w3.org/2000/svg" style="aspect-ratio: 1;" width="100%"></svg>
+	      </div>
+	      <div class="alert alert-primary"><b>Message:</b> <p id="messages"></p></div>
+	    </div>
+	  </div>
 	</div>
       </div>
     </div>
-    <p id="messages"></p>
+    <div class="container">
+      <p><a href="http://accessibility.mit.edu">Accessibility</a></p>
+    </div>
   </body>
 </html>
