@@ -47,8 +47,9 @@
 	  <div class="card">
 	    <div class="card-body">
 	      <div class="card-title"><h4>The Network Model</h4></div>
-	      <div class="card-subtitle mb-2 text-muted"><h5>An interactive picture is worth a thousand words</h5></div>
-	      <div class="card-text">This interactive graphic shows the network model described in the paper. You can move the square handles to move the lines. Double-click on the line to create and delete handles. It will not let you create diagrams that break the rules of the CCAC network model. The example shown is that of a token bucket filter where S(t) can also burst along with A(t) upto 1 BDP. Here, D = 1 propagation delay. Touch screens are not supported.</div>
+	      <div class="card-subtitle mb-2 text-muted"><h5>An interactive graph is worth a thousand words</h5></div>
+	      <div class="card-text"><p>This interactive graphic shows the network model described in the paper. You can move the square handles to move the lines. Double-click on the line to create and delete handles. Mousing over the handle shows the bounds by which the handle can be moved. If you try to move the handle to a place that is illegal in the model, it will prevent that and display a message showing why the move is illegal. Touch screens are not supported.</p>
+	      <p>The example shown is that of a token bucket filter where S(t) can also burst along with A(t) upto 1 BDP. Here, D = 1 propagation delay.</p></div>
 	      <div class="row">
 		<div class="col-md-4"><svg xmlns="http://www.w3.org/2000/svg" width=50 height=20><line x1=0 y1=10 x2=40 y2=10 style="stroke:rgb(0,0,255);stroke-width:2"></line></svg>Arrival Curve, A(t)</div>
 		<div class="col-md-4"><svg xmlns="http://www.w3.org/2000/svg" width=50 height=20><line x1=0 y1=10 x2=40 y2=10 style="stroke:rgb(255,0,0);stroke-width:2"></line></svg>Service Curve, A(t)</div>
@@ -57,7 +58,7 @@
 		  <!-- Lines to create bounds on where a point can move -->
 		</svg>
 	      </div>
-	      <div class="alert alert-primary"><b>Message:</b> <p id="messages"></p>The widget will sometimes prevent you from dragging handles into places that would lead to a violation of a constraint in the model. An explanation of the violation will appear here</div>
+	      <div class="alert alert-primary" id="message_box"><b>Constraint Violated:</b> <span id="messages"></span></div>
 	    </div>
 	  </div>
 	</div>

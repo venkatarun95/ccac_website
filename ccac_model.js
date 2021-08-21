@@ -47,6 +47,7 @@ function onLineMouseDown(evt, graph, line_name) {
     const line = lines[line_name];
     const vals = click_location(evt, graph, line);
     const x = vals[0]; const y = vals[1]; const index = vals[2];
+    console.log(evt.clientX, evt.clientY);
 
     if (index != null) {
 	drag = true;
@@ -99,6 +100,9 @@ function onLineMouseMove(evt, graph, line) {
 	// }
 	return;
     }
+
+    update_margins(line, index)
+
     for (let i in bounds_objs) {
 	const obj = document.getElementById(bounds_objs[i]);
 	obj.setAttributeNS(null, "visibility", "visible");
@@ -175,6 +179,9 @@ function onMouseMove(evt, graph) {
 	if (!check[0]) {
 	    lines = lines_clone;
 	    document.getElementById("messages").innerHTML = check[2];
+	    msg_box = document.getElementById("message_box");
+	    msg_box.setAttribute("style", "position:fixed;left:"+evt.clientX+"px;top:"+evt.clientY+"px;");
+	    msg_box.removeAttribute("hidden");
 	    return;
 	}
 
@@ -185,10 +192,13 @@ function onMouseMove(evt, graph) {
     }
 }
 
-function onLineMouseUp(evt) {
+function onMouseUp(evt) {
     drag = false;
     cur_line = null;
-    cur_index = null
+    cur_index = null;
+    msg_box = document.getElementById("message_box");
+    msg_box.setAttribute("hidden", true);
+    console.log("MouseUp")
 }
 
 // A line in a graph
@@ -366,37 +376,75 @@ class Graph {
     }
 }
 
-// Figure out how much margin each point in each line has
-function update_margins() {
-    const threshes = [0.01, -0.01, 0.02, -0.02, 0.04, -0.04, 0.08, -0.08, 0.16, -0.16];
-    for (let l in lines) {
-	for (let i in lines[l].pts) {
-	    for (let coord in [0, 1]) {
-		lines[l].margins[i][coord] = [0, 0]
-		for (let m in threshes) {
-		    const lines_clone = _.cloneDeep(lines);
-		    lines[l].pts[i][coord] += threshes[m];
-		    const res = check_ccac_constraints(l);
-		    lines = lines_clone;
-		    if (res[0]) {
-			if (threshes[m] < 0) {
-			    lines[l].margins[i][coord][0] = threshes[m];
-			}
-			else {
-			    lines[l].margins[i][coord][1] = threshes[m];
-			}
-		    }
-		    else {
-			break;
-		    }
-		}
-	    }
-	    // Fix the endpoints. check_ccac_constraints will pass it
-	    // because it will fix it on its own
-	    if (i == 0 || i == lines[l].pts.length - 1) {
-		lines[l].margins[i][0] = [0, 0]
-	    }
+// Do a binary search where the upper bound is not known. Should call
+// `set_test_result` with the result from the value from the previous call to
+// `get_test_pt`. When get_test_pt returns null, we are done. Assumes `res` in
+// `set_test_results` is true for 0 and false toward infinity
+class BinarySearch {
+    constructor(err) {
+	this.lo = 0;
+	this.next = err;
+	this.hi = null; // Means infinity
+	this.err = err;
+    }
+
+    get_test_pt() {
+	if (this.lo == 0)
+	    return this.next;
+	if (this.hi == null) {
+	    if (this.lo >= 1024 * this.err)
+		return null;
+	    this.next *= 2;
+	    return this.next;
 	}
+	if (this.hi - this.lo <= this.err)
+	    return null
+	this.next = (this.lo + this.hi) / 2;
+	return this.next;
+    }
+
+    set_test_result(res) {
+	if (res)
+	    this.lo = this.next;
+	else
+	    this.hi = this.next;
+    }
+}
+
+// Figure out how much margin each point in each line has
+function update_margins(line, index) {
+    for (let coord in [0, 1]) {
+	lines[line].margins[index][coord] = [0, 0]
+	for (let sign in [0, 1]) {
+	    let bin = new BinarySearch(0.01);
+	    var num_iter = 0;
+	    while (true) {
+		var next = bin.get_test_pt();
+		if (next == null)
+		    break;
+		if (sign == 1)
+		    next *= -1;
+
+		const lines_clone = _.cloneDeep(lines);
+		lines[line].pts[index][coord] += next
+		const res = check_ccac_constraints(line);
+		lines = lines_clone;
+
+		bin.set_test_result(res[0]);
+
+		num_iter += 1;
+		if (num_iter > 10)
+		    break;
+	    }
+	    lines[line].margins[index][coord][sign] = (bin.hi + bin.lo) / 2;
+	    if (sign == 1)
+		lines[line].margins[index][coord][sign] *= -1;
+	}
+    }
+    // Fix the endpoints. check_ccac_constraints will pass it
+    // because it will fix it on its own
+    if (index == 0 || index == lines[line].pts.length - 1) {
+	lines[line].margins[index][0] = [0, 0]
     }
 }
 
@@ -450,10 +498,12 @@ function check_ccac_constraints(line_name) {
 
     // If U or L were modified, change the other one to match
     if (line_name == "U") {
-	lines["L"] = new Line("L", lines["U"].pts.map(pt => [pt[0] + D, pt[1]]), "black")
+	lines["L"] = new Line("L", lines["U"].pts.map(pt => [pt[0] + D, pt[1]]), "black");
+	changed.push("L");
     }
     if (line_name == "L") {
-	lines["U"] = new Line("U", lines["L"].pts.map(pt => [pt[0] - D, pt[1]]), "black")
+	lines["U"] = new Line("U", lines["L"].pts.map(pt => [pt[0] - D, pt[1]]), "black");
+	changed.push("U");
     }
 
     // Compare the following pairs of things. The first one must be <= the other
@@ -555,17 +605,6 @@ $(document).ready(function() {
 	cum.plot_line(lines[line]);
     }
 
-    document.addEventListener("mouseup", onLineMouseUp);
+    document.addEventListener("mouseup", onMouseUp);
     cum.svg.addEventListener("mousemove", function(evt) {onMouseMove(evt, cum);});
-
-    // Update the margins periodically
-    window.setInterval(update_margins, 500);
-    // Animate the margins
-    // window.setInterval(function() {
-    // 	if (!drag) {
-    // 	    for (let l in lines) {
-    // 		cum.plot_line(lines[l]);
-    // 	    }
-    // 	}
-    // }, 50)
 });
