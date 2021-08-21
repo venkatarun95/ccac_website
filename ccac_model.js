@@ -43,7 +43,6 @@ function click_location(evt, graph, line) {
     return [cx, cy, index];
 }
 
-
 function onLineMouseDown(evt, graph, line_name) {
     const line = lines[line_name];
     const vals = click_location(evt, graph, line);
@@ -89,12 +88,69 @@ function onLineDblClick(evt, graph, line) {
     }
 }
 
-function onLineMouseMove(evt, graph) {
+function onLineMouseMove(evt, graph, line) {
+    // Just highlight the feasible region and do not drag
+    const vals = click_location(evt, graph, lines[line]);
+    const index = vals[2];
+    if (index == null) {
+	// for (let i in bounds_objs) {
+	//     const obj = document.getElementById(bounds_objs[i]);
+	//     obj.setAttributeNS(null, "visibility", false);
+	// }
+	return;
+    }
+    for (let i in bounds_objs) {
+	const obj = document.getElementById(bounds_objs[i]);
+	obj.setAttributeNS(null, "visibility", "visible");
+    }
+
+    const pt = lines[line].pts[index];
+    const m = lines[line].margins[index];
+
+    obj = document.getElementById("y_bound");
+    obj.setAttributeNS(null, "x1", graph.x_coord(pt[0]));
+    obj.setAttributeNS(null, "y1", graph.y_coord(pt[1] + m[1][0]));
+    obj.setAttributeNS(null, "x2", graph.x_coord(pt[0]));
+    obj.setAttributeNS(null, "y2", graph.y_coord(pt[1] + m[1][1]));
+
+    obj = document.getElementById("y_bound_cap1");
+    obj.setAttributeNS(null, "x1", graph.x_coord(pt[0]-0.05));
+    obj.setAttributeNS(null, "y1", graph.y_coord(pt[1] + m[1][1]));
+    obj.setAttributeNS(null, "x2", graph.x_coord(pt[0]+0.05));
+    obj.setAttributeNS(null, "y2", graph.y_coord(pt[1] + m[1][1]));
+
+    obj = document.getElementById("y_bound_cap2");
+    obj.setAttributeNS(null, "x1", graph.x_coord(pt[0]-0.05));
+    obj.setAttributeNS(null, "y1", graph.y_coord(pt[1] + m[1][0]));
+    obj.setAttributeNS(null, "x2", graph.x_coord(pt[0]+0.05));
+    obj.setAttributeNS(null, "y2", graph.y_coord(pt[1] + m[1][0]));
+
+    obj = document.getElementById("x_bound");
+    obj.setAttributeNS(null, "x1", graph.x_coord(pt[0] + m[0][0]));
+    obj.setAttributeNS(null, "y1", graph.y_coord(pt[1]));
+    obj.setAttributeNS(null, "x2", graph.x_coord(pt[0] + m[0][1]));
+    obj.setAttributeNS(null, "y2", graph.y_coord(pt[1]));
+
+    obj = document.getElementById("x_bound_cap1");
+    obj.setAttributeNS(null, "x1", graph.x_coord(pt[0] + m[0][0]));
+    obj.setAttributeNS(null, "y1", graph.y_coord(pt[1]-0.05));
+    obj.setAttributeNS(null, "x2", graph.x_coord(pt[0] + m[0][0]));
+    obj.setAttributeNS(null, "y2", graph.y_coord(pt[1]+0.05));
+
+    obj = document.getElementById("x_bound_cap2");
+    obj.setAttributeNS(null, "x1", graph.x_coord(pt[0] + m[0][1]));
+    obj.setAttributeNS(null, "y1", graph.y_coord(pt[1]-0.05));
+    obj.setAttributeNS(null, "x2", graph.x_coord(pt[0] + m[0][1]));
+    obj.setAttributeNS(null, "y2", graph.y_coord(pt[1]+0.05));
+}
+
+function onMouseMove(evt, graph) {
     if (Date.now() - last_move < 10)
 	return;
 
-    if (!drag)
+    if (!drag) {
 	return;
+    }
     last_move = Date.now();
 
     const index = cur_index;
@@ -141,6 +197,7 @@ class Line {
     constructor(name, pts, color) {
 	this.name = name;
 	this.pts = pts;
+	this.margins = this.pts.map(_ => [[0, 0], [0, 0]]);
 	this.style = "stroke:"+color+";fill:"+color+";";
     }
 
@@ -157,6 +214,21 @@ class Line {
 		return this.pts[i-1][1] + (this.pts[i][1] - this.pts[i-1][1]) * (x - this.pts[i-1][0]) / (this.pts[i][0] - this.pts[i-1][0]);
 	    }
 	}
+    }
+
+    // Get the coordinates where the line is moving by `margins`
+    get_moving_pts() {
+	if (drag) {
+	    return this.pts;
+	}
+	var res = _.cloneDeep(this.pts);
+	for (let i in res) {
+	    const t = 6.28 * (Date.now() / 2000 + i);
+	    const m = this.margins[i];
+	    res[i][0] += ((m[0][1] + m[0][0])/2 + (m[0][1] - m[0][0]) * Math.cos(t)) / 10;
+	    res[i][1] += ((m[1][0] + m[1][1])/2 + (m[1][1] - m[1][0]) * Math.sin(t)) / 10 ;
+	}
+	return res;
     }
 }
 
@@ -263,30 +335,68 @@ class Graph {
 	    l = document.getElementById(this.svg_id + "-" + line.name);
 	    l.addEventListener("mousedown", function(evt) {onLineMouseDown(evt, graph, line.name);});
 	    l.addEventListener("dblclick", function(evt) {onLineDblClick(evt, graph, line.name);});
+	    l.addEventListener("mousemove", function(evt) {onLineMouseMove(evt, graph, line.name);});
 	}
 
+	// Get the moving version of the line
+	const pts = line.pts;
+
 	// Make the path command
-	let cmd = "M " + this.x_coord(line.pts[0][0]) + " " + this.y_coord(line.pts[0][1]);
-	for (let i in line.pts) {
-	    cmd += " L " + this.x_coord(line.pts[i][0]) + " " + this.y_coord(line.pts[i][1]);
+	let cmd = "M " + this.x_coord(pts[0][0]) + " " + this.y_coord(pts[0][1]);
+	for (let i in pts) {
+	    cmd += " L " + this.x_coord(pts[i][0]) + " " + this.y_coord(pts[i][1]);
 	}
 	// Come back so we do not form a filled area
-	for (let i in line.pts) {
-	    i = line.pts.length - i - 1;
-	    cmd += " L " + this.x_coord(line.pts[i][0]) + " " + this.y_coord(line.pts[i][1]);
+	for (let i in pts) {
+	    i = pts.length - i - 1;
+	    cmd += " L " + this.x_coord(pts[i][0]) + " " + this.y_coord(pts[i][1]);
 	}
 
 	// Draw the squares
 	const side = this.handle_side;
-	for (let i in line.pts) {
-	    let x = this.x_coord(line.pts[i][0]);
-	    let y = this.y_coord(line.pts[i][1]);
+	for (let i in pts) {
+	    let x = this.x_coord(pts[i][0]);
+	    let y = this.y_coord(pts[i][1]);
 	    cmd += " M " + (x - side/2) + " " + (y - side/2) +
 		" h " + side + " v " + side + " h -" + side + " v -" + side;
 	}
 
 	l.setAttributeNS(null, "d", cmd);
 	let graph = this;
+    }
+}
+
+// Figure out how much margin each point in each line has
+function update_margins() {
+    const threshes = [0.01, -0.01, 0.02, -0.02, 0.04, -0.04, 0.08, -0.08, 0.16, -0.16];
+    for (let l in lines) {
+	for (let i in lines[l].pts) {
+	    for (let coord in [0, 1]) {
+		lines[l].margins[i][coord] = [0, 0]
+		for (let m in threshes) {
+		    const lines_clone = _.cloneDeep(lines);
+		    lines[l].pts[i][coord] += threshes[m];
+		    const res = check_ccac_constraints(l);
+		    lines = lines_clone;
+		    if (res[0]) {
+			if (threshes[m] < 0) {
+			    lines[l].margins[i][coord][0] = threshes[m];
+			}
+			else {
+			    lines[l].margins[i][coord][1] = threshes[m];
+			}
+		    }
+		    else {
+			break;
+		    }
+		}
+	    }
+	    // Fix the endpoints. check_ccac_constraints will pass it
+	    // because it will fix it on its own
+	    if (i == 0 || i == lines[l].pts.length - 1) {
+		lines[l].margins[i][0] = [0, 0]
+	    }
+	}
     }
 }
 
@@ -402,6 +512,8 @@ function check_ccac_constraints(line_name) {
     return [res, changed, msgs];
 }
 
+
+const bounds_objs = ["y_bound", "y_bound_cap1", "y_bound_cap2", "x_bound", "x_bound_cap1", "x_bound_cap2"]
 var D = 1;
 var C = 1;
 var buffer = 1;
@@ -429,10 +541,31 @@ var cum;
 
 $(document).ready(function() {
     cum = new Graph("cumulative_graph", [0, T + D], [0, 1.1 * C * T]);
+
+    // Create the margin objects first so they have a lower z value
+    for (let i in bounds_objs) {
+	svg_elem(cum.svg, "line", {
+	    "id": bounds_objs[i],
+	    "style": "stroke:black;stroke-width:2",
+	    "visibility": "hidden",
+	});
+	}
+
     for (let line in lines) {
 	cum.plot_line(lines[line]);
     }
 
     document.addEventListener("mouseup", onLineMouseUp);
-    cum.svg.addEventListener("mousemove", function(evt) {onLineMouseMove(evt, cum);});
+    cum.svg.addEventListener("mousemove", function(evt) {onMouseMove(evt, cum);});
+
+    // Update the margins periodically
+    window.setInterval(update_margins, 500);
+    // Animate the margins
+    // window.setInterval(function() {
+    // 	if (!drag) {
+    // 	    for (let l in lines) {
+    // 		cum.plot_line(lines[l]);
+    // 	    }
+    // 	}
+    // }, 50)
 });
