@@ -47,7 +47,6 @@ function onLineMouseDown(evt, graph, line_name) {
     const line = lines[line_name];
     const vals = click_location(evt, graph, line);
     const x = vals[0]; const y = vals[1]; const index = vals[2];
-    console.log(evt.clientX, evt.clientY);
 
     if (index != null) {
 	drag = true;
@@ -198,7 +197,6 @@ function onMouseUp(evt) {
     cur_index = null;
     msg_box = document.getElementById("message_box");
     msg_box.setAttribute("hidden", true);
-    console.log("MouseUp")
 }
 
 // A line in a graph
@@ -308,9 +306,9 @@ class Graph {
 	    });
 	    svg_elem(this.svg, "text", {
 		"x": this.x0 - 15,
-		"y": this.y_coord(b) + 5,
+		"y": this.y_coord(C * b) + 5,
 		"style": "stroke:rgb(0,0,0);stroke-width:1"
-	    }, document.createTextNode(b));
+	    }, document.createTextNode(C * b));
 
 	}
     }
@@ -414,7 +412,6 @@ class BinarySearch {
 // Figure out how much margin each point in each line has
 function update_margins(line, index) {
     for (let coord in [0, 1]) {
-	lines[line].margins[index][coord] = [0, 0]
 	for (let sign in [0, 1]) {
 	    let bin = new BinarySearch(0.01);
 	    var num_iter = 0;
@@ -542,7 +539,8 @@ function check_ccac_constraints(line_name) {
 	    msgs += "The slope of the bounds must be <= C, because that is the rate at which tokens arrive. ";
 	    return [false, changed, msgs];
 	}
-	if (slope < C * (1 - 0.1)) {
+	console.log(i, slope)
+	if (slope < C * (1 - 0.01)) {
 	    // See if waste is allowed here
 	    if (U[i-1][1] < lines["A"].get_y(U[i-1][0]) ||
 	        U[i][1] < lines["A"].get_y(U[i][0])) {
@@ -562,41 +560,22 @@ function check_ccac_constraints(line_name) {
     return [res, changed, msgs];
 }
 
+function reset_graph() {
+    // Remove svg elements
+    var svg = document.getElementById("cumulative_graph");
+    while (svg.lastChild) {
+        svg.removeChild(svg.lastChild);
+    }
+    if (cum != undefined)
+	cum.svg.removeEventListener("mousemove", function(evt) {onMouseMove(evt, cum);});
 
-const bounds_objs = ["y_bound", "y_bound_cap1", "y_bound_cap2", "x_bound", "x_bound_cap1", "x_bound_cap2"]
-var D = 1;
-var C = 1;
-var buffer = 1;
-var T = 5;
-// Error margin
-const epsilon = 1e-6;
-
-// The set of lines
-// var lines = {
-//     "A": new Line("A", [[0, 0.5*C], [T, C*T + 0.5*C]], "blue"),
-//     "S": new Line("S", [[0, -0.5*C], [T, C*(T-0.1)]], "red"),
-//     "U": new Line("U", [[0, 0], [T, C*T]], "black"),
-//     "L": new Line("L", [[D, 0], [T+D, C*T]], "black"),
-// };
-
-// These values were created using the graphical interface, and hence the ridiculously large precision
-var lines = {
-    "A": new Line("A", [[0,0.03318518411049237],[0.9098360655737703,0.9410859127079423],[3.6967213114754096,1.1126479963570128],[3.703551912568306,3.1350751366120218],[5,3.1388320054295717]], "blue"),
-    "S": new Line("S", [[0,-0.03569004357621072],[0.9644808743169397,0.9097789910321681],[3.737704918032787,1.0876024590163937],[3.771857923497268,1.945412112932605],[5,3.1162909836065573]], "red"),
-    "U": new Line("U", [[0,0],[0.9576502732240435,0.947347297043097],[2.8087431693989067,1.0850977524165033],[5,3.170138927105346]], "black"),
-    "L": new Line("L", [[1,0],[1.9576502732240435,0.947347297043097],[3.8087431693989067,1.0850977524165033],[6,3.170138927105346]], "black"),
-};
-
-var cum;
-
-$(document).ready(function() {
     cum = new Graph("cumulative_graph", [0, T + D], [0, 1.1 * C * T]);
 
     // Create the margin objects first so they have a lower z value
     for (let i in bounds_objs) {
 	svg_elem(cum.svg, "line", {
 	    "id": bounds_objs[i],
-	    "style": "stroke:black;stroke-width:2",
+	    "style": "stroke:rgb(128, 128, 128);stroke-width:2",
 	    "visibility": "hidden",
 	});
 	}
@@ -607,4 +586,104 @@ $(document).ready(function() {
 
     document.addEventListener("mouseup", onMouseUp);
     cum.svg.addEventListener("mousemove", function(evt) {onMouseMove(evt, cum);});
+}
+
+const bounds_objs = ["y_bound", "y_bound_cap1", "y_bound_cap2", "x_bound", "x_bound_cap1", "x_bound_cap2"]
+var D;
+var C;
+var buffer;
+var T;
+
+class Preset {
+    constructor(name, T) {
+	this.name = name;
+	this.T = T;
+	this.D = 1;
+	this.C = 1;
+    }
+}
+
+var preset_tbf = new Preset("Token Bucket Filter", 5);
+preset_tbf.lines = {
+    "A": new Line("A", [[0,0.03318518411049237],[0.9098360655737703,0.9410859127079423],[3.6967213114754096,1.1126479963570128],[3.703551912568306,3.1350751366120218],[5,3.1388320054295717]], "blue"),
+    "S": new Line("S", [[0,-0.03569004357621072],[0.9644808743169397,0.9097789910321681],[3.737704918032787,1.0876024590163937],[3.771857923497268,1.945412112932605],[5,3.1162909836065573]], "red"),
+    "U": new Line("U", [[0,0],[0.9576502732240435,0.947347297043097],[2.8087431693989067,1.0850977524165033],[5,3.170138927105346]], "black"),
+    "L": new Line("L", [[1,0],[1.9576502732240435,0.947347297043097],[3.8087431693989067,1.0850977524165033],[6,3.170138927105346]], "black")
+}
+
+var preset_ack_aggr = new Preset("Ack Aggregation", 5);
+preset_ack_aggr.D = 1;
+preset_ack_aggr.lines = {
+    "A": new Line("A", [[0, 0.1], [5, 5.1]], "blue"),
+    "S": new Line("S", [[0.1, 0], [1, 0.1], [1, 1], [2, 1], [2, 2], [3, 2], [3, 3], [4, 3], [4, 4], [5, 4], [5, 4.9]], "red"),
+    "U": new Line("U", [[0, 0], [5, 5]], "black"),
+    "L": new Line("L", [[1, 0], [5+1, 5]], "black"),
+};
+
+var preset_delay = new Preset("Constant Delay", 10);
+preset_delay.lines = {
+    "A": new Line("A", [[0, 0.5], [10, 10.5]], "blue"),
+    "S": new Line("S", [[0, -0.9], [10, 9.1]], "red"),
+    "U": new Line("U", [[0, 0], [10, 10]], "black"),
+    "L": new Line("L", [[1, 0], [11, 10]], "black"),
+};
+
+const presets = {"aggr": preset_ack_aggr, "tbf": preset_tbf, "delay": preset_delay}
+
+var lines;
+
+var cum;
+
+$(document).ready(function() {
+    let preset_select = document.getElementById("select_preset");
+    for (x in presets) {
+	let e = document.createElement("option");
+	e.setAttribute("value", x);
+	e.appendChild(document.createTextNode(presets[x].name));
+	preset_select.appendChild(e);
+    }
+
+    function set_preset() {
+	// Populate preset
+	let preset_select = document.getElementById("select_preset");
+	const preset = presets[preset_select.value];
+	T = preset.T;
+	D = preset.D;
+	C = preset.C;
+	lines = preset.lines;
+	document.getElementById("inp_C").value = C;
+	document.getElementById("inp_T").value = T;
+	document.getElementById("inp_D").value = D;
+    }
+
+    set_preset();
+    reset_graph();
+
+    preset_select.addEventListener("change", function() {
+	set_preset();
+	reset_graph();
+    });
+
+    let param_button = document.getElementById("param_button");
+    param_button.addEventListener("click", function() {
+	C_a = parseFloat(document.getElementById("inp_C").value);
+	T_a = parseInt(document.getElementById("inp_T").value);
+	D_a = parseFloat(document.getElementById("inp_D").value);
+	if (isNaN(C_a) || isNaN(T_a) || isNaN(D_a)) {
+	    document.getElementById("param_err_msg").innerHTML = "Values must be numbers";
+	    console.log("Not a number")
+	    return;
+	}
+	document.getElementById("param_err_msg").innerHTML = "";
+	C = C_a; T = T_a; D = D_a;
+
+	lines = {
+	    "A": new Line("A", [[0, -0.8*C], [T, C*T-0.8*C]], "blue"),
+	    "S": new Line("S", [[0, -0.9*C], [T, C*(T-0.9)]], "red"),
+	    "U": new Line("U", [[0, 0], [T, C*T]], "black"),
+	    "L": new Line("L", [[D, 0], [T+D, C*T]], "black"),
+	};
+
+	reset_graph();
+    });
 });

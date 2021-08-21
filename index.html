@@ -4,8 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>Formally Verifying Congestion Control Behavior</title>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
     <link href="open-iconic/font/css/open-iconic-bootstrap.css" rel="stylesheet">
+
+
     <link href="style.css" rel="stylesheet">
     <script type="text/javascript" src="jquery-3.6.0.min.js"></script>
     <script src="lodash.js"></script>
@@ -49,16 +54,44 @@
 	      <div class="card-title"><h4>The Network Model</h4></div>
 	      <div class="card-subtitle mb-2 text-muted"><h5>An interactive graph is worth a thousand words</h5></div>
 	      <div class="card-text"><p>This interactive graphic shows the network model described in the paper. You can move the square handles to move the lines. Double-click on the line to create and delete handles. Mousing over the handle shows the bounds by which the handle can be moved. If you try to move the handle to a place that is illegal in the model, it will prevent that and display a message showing why the move is illegal. Touch screens are not supported.</p>
-	      <p>The example shown is that of a token bucket filter where S(t) can also burst along with A(t) upto 1 BDP. Here, D = 1 propagation delay.</p></div>
+		<p>The example shown is that of a token bucket filter where S(t) can also burst along with A(t) upto 1 BDP. Here, D = 1 propagation delay. This widget does not yet show how loss works.</p></div>
+	      <div class="row">
+		<div class="col-md-4">
+		  <b>Preset:</b><br>
+		  <select id="select_preset">
+		  </select>
+		</div>
+		<div class="col-md-8">
+		  <b>Plain preset parameters:</b><br>
+		  <div class="input-group mb-3">
+		    <div class="input-group-prepend">
+		      <span class="input-group-text">Link rate, C</span>
+		    </div>
+		    <input type="text" class="form-control" id="inp_C" aria-describedby="basic-addon3" value="1">
+		    <div class="input-group-prepend">
+		      <span class="input-group-text">Total time, T (RTTs)</span>
+		    </div>
+		    <input type="text" class="form-control" id="inp_T" aria-describedby="basic-addon3" value="5">
+		    <div class="input-group-prepend">
+		      <span class="input-group-text">Slack, D (RTTs)</span>
+		    </div>
+		    <input type="text" class="form-control" id="inp_D" aria-describedby="basic-addon3" value="1">
+		    <div class="input-group-append">
+		      <button class="btn btn-secondary" id="param_button">Set Params</button>
+		    </div>
+		  </div>
+		  <p id="param_err_msg"></p>
+		</div>
+		</div>
+	      </div>
+	      </div>
 	      <div class="row">
 		<div class="col-md-4"><svg xmlns="http://www.w3.org/2000/svg" width=50 height=20><line x1=0 y1=10 x2=40 y2=10 style="stroke:rgb(0,0,255);stroke-width:2"></line></svg>Arrival Curve, A(t)</div>
 		<div class="col-md-4"><svg xmlns="http://www.w3.org/2000/svg" width=50 height=20><line x1=0 y1=10 x2=40 y2=10 style="stroke:rgb(255,0,0);stroke-width:2"></line></svg>Service Curve, A(t)</div>
 		<div class="col-md-4"><svg xmlns="http://www.w3.org/2000/svg" width=50 height=20><line x1=0 y1=10 x2=40 y2=10 style="stroke:rgb(0,0,0);stroke-width:2"></line></svg>Bounds on S(t)</div>
-		<svg id="cumulative_graph" xmlns="http://www.w3.org/2000/svg" style="aspect-ratio: 1;" width="100%">
-		  <!-- Lines to create bounds on where a point can move -->
-		</svg>
+		<svg id="cumulative_graph" xmlns="http://www.w3.org/2000/svg" style="aspect-ratio: 1;" width="100%"></svg>
 	      </div>
-	      <div class="alert alert-primary" id="message_box"><b>Constraint Violated:</b> <span id="messages"></span></div>
+	      <div class="alert alert-primary" id="message_box" hidden><b>Constraint Violated:</b> <span id="messages"></span></div>
 	    </div>
 	  </div>
 	</div>
