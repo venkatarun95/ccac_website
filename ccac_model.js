@@ -344,6 +344,10 @@ class Graph {
 	    l.addEventListener("mousedown", function(evt) {onLineMouseDown(evt, graph, line.name);});
 	    l.addEventListener("dblclick", function(evt) {onLineDblClick(evt, graph, line.name);});
 	    l.addEventListener("mousemove", function(evt) {onLineMouseMove(evt, graph, line.name);});
+
+	    // l.addEventListener("touchstart", function(evt) {onLineMouseDown(evt, graph, line.name);});
+	    // l.addEventListener("dblclick", function(evt) {onLineDblClick(evt, graph, line.name);});
+	    // l.addEventListener("touchmove", function(evt) {onLineMouseMove(evt, graph, line.name);});
 	}
 
 	// Get the moving version of the line
@@ -566,8 +570,10 @@ function reset_graph() {
     while (svg.lastChild) {
         svg.removeChild(svg.lastChild);
     }
-    if (cum != undefined)
+    if (cum != undefined) {
 	cum.svg.removeEventListener("mousemove", function(evt) {onMouseMove(evt, cum);});
+	// cum.svg.removeEventListener("touchmove", function(evt) {onMouseMove(evt, cum);});
+    }
 
     cum = new Graph("cumulative_graph", [0, T + D], [0, 1.1 * C * T]);
 
@@ -586,6 +592,9 @@ function reset_graph() {
 
     document.addEventListener("mouseup", onMouseUp);
     cum.svg.addEventListener("mousemove", function(evt) {onMouseMove(evt, cum);});
+
+    // document.addEventListener("touchend", onMouseUp);
+    // cum.svg.addEventListener("touchmove", function(evt) {onMouseMove(evt, cum);});
 }
 
 const bounds_objs = ["y_bound", "y_bound_cap1", "y_bound_cap2", "x_bound", "x_bound_cap1", "x_bound_cap2"]
@@ -678,8 +687,8 @@ $(document).ready(function() {
 	C = C_a; T = T_a; D = D_a;
 
 	lines = {
-	    "A": new Line("A", [[0, -0.8*C], [T, C*T-0.8*C]], "blue"),
-	    "S": new Line("S", [[0, -0.9*C], [T, C*(T-0.9)]], "red"),
+	    "A": new Line("A", [[0, -0.8*C*D], [T, C*(T-0.8*D)]], "blue"),
+	    "S": new Line("S", [[0, -0.9*C*D], [T, C*(T-0.9*D)]], "red"),
 	    "U": new Line("U", [[0, 0], [T, C*T]], "black"),
 	    "L": new Line("L", [[D, 0], [T+D, C*T]], "black"),
 	};
